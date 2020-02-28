@@ -15,6 +15,10 @@ class CreateArticulosTable extends Migration
     {
         Schema::create('articulos', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('nombre');
+            
+            $table->string('foto')->default('/img/default.jpg');
+            $table->float('precio',5,2);
             $table->timestamps();
         });
     }
