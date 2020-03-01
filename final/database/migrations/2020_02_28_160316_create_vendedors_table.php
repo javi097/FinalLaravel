@@ -15,6 +15,9 @@ class CreateVendedorsTable extends Migration
     {
         Schema::create('vendedors', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('nombre')->unique();
+            $table->string('apellidos');
+            $table->string('foto')->default('/img/vendedores/default.jpg');
             $table->timestamps();
         });
     }

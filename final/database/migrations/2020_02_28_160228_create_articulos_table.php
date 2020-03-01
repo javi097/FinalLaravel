@@ -15,10 +15,16 @@ class CreateArticulosTable extends Migration
     {
         Schema::create('articulos', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->string('nombre');
-            
-            $table->string('foto')->default('/img/default.jpg');
+            $table->string('nombre')->unique();
+            $table->string('detalle');
+            $table->string('foto')->default('/img/articulos/default.jpg');
             $table->float('precio',5,2);
+            $table->bigInteger('categoria_id')->unsigned()->nullable();
+            $table->foreign('categoria_id')
+            ->references('id')
+            ->on('categorias')
+            ->onDelete('set null')
+            ->onUpdate('cascade');
             $table->timestamps();
         });
     }

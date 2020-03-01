@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Vendedor;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Storage;
 class VendedorController extends Controller
 {
     /**
@@ -14,7 +14,8 @@ class VendedorController extends Controller
      */
     public function index()
     {
-        //
+        $vendedores=Vendedor::orderBy('nombre')->paginate(3);
+        return view('vendedores.index',compact('vendedores'));
     }
 
     /**
@@ -24,7 +25,8 @@ class VendedorController extends Controller
      */
     public function create()
     {
-        //
+        return view('vendedores.create');
+        
     }
 
     /**
@@ -35,7 +37,30 @@ class VendedorController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nombre'=>['required','unique:categorias,nombre'],
+            'apellidos'=>['required']
+        ]);
+        //compruebo si he subido archiivo
+        if($request->has('foto')){
+            $request->validate([
+                'foto'=>['image']
+            ]);
+            //Todo bien hemos subido un archivo y es de imagen
+            $file=$request->file('foto');
+            //Creo un nombre
+            $nombre='vendedores/'.time().'_'.$file->getClientOriginalName();
+            //Guardo el archivo de imagen
+            Storage::disk('public')->put($nombre, \File::get($file));
+            //Guardo el articulo pero la imagen estaria mal
+            $vendedor=Vendedor::create($request->all());
+            //actualiza el registro foto del coche guardado
+            $vendedor->update(['foto'=>"img/$nombre"]);
+        }
+        else{
+            Vendedor::create($request->all());
+        }
+        return redirect()->route('vendedores.index')->with("mensaje", "Vendedor guardado correctamente");
     }
 
     /**
@@ -44,9 +69,9 @@ class VendedorController extends Controller
      * @param  \App\Vendedor  $vendedor
      * @return \Illuminate\Http\Response
      */
-    public function show(Vendedor $vendedor)
+    public function show(Vendedor $vendedore)
     {
-        //
+        return view('vendedores.detalle',compact('vendedore'));
     }
 
     /**
@@ -55,9 +80,9 @@ class VendedorController extends Controller
      * @param  \App\Vendedor  $vendedor
      * @return \Illuminate\Http\Response
      */
-    public function edit(Vendedor $vendedor)
+    public function edit(Vendedor $vendedore)
     {
-        //
+        return view('vendedores.edit', compact('vendedore'));
     }
 
     /**
@@ -67,9 +92,33 @@ class VendedorController extends Controller
      * @param  \App\Vendedor  $vendedor
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Vendedor $vendedor)
+    public function update(Request $request, Vendedor $vendedore)
     {
-        //
+        $request->validate([
+            'nombre'=>['required','unique:articulos,nombre,'.$vendedore->id],
+            'apellidos'=>['required'],
+        ]);
+        //compruebo si he subido archiivo
+        if($request->has('foto')){
+            $request->validate([
+                'foto'=>['image']
+            ]);
+            //Todo bien hemos subido un archivo y es de imagen
+            $file=$request->file('foto');
+            //Creo un nombre
+            $nombre='vendedores/'.time().'_'.$file->getClientOriginalName();
+            //Guardo el archivo de imagen
+            Storage::disk('public')->put($nombre, \File::get($file));
+            if(basename($vendedore->foto!='default.jpg')){
+                unlink($vendedore->foto);
+            }
+            $vendedore->update($request->all());
+            $vendedore->update(['foto'=>"img/$nombre"]);
+        }
+        else{
+            $vendedore->update($request->all());
+        }
+        return redirect()->route('vendedores.index')->with("mensaje", "Vendedor Modificado correctamente");
     }
 
     /**
